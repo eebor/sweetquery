@@ -7,6 +7,7 @@ import (
 	"go/parser"
 	"go/token"
 	"reflect"
+	"strconv"
 	"text/template"
 
 	"github.com/eebor/sweetquery/querygen/model"
@@ -54,7 +55,7 @@ func (g *builderGenerator) ProcessTask(task *model.GenTask) error {
 
 		operations[i] = writeOperation{
 			Type:      opTypeRelataion[t.Name],
-			Key:       key,
+			Key:       strconv.Quote(key),
 			Value:     "req." + field.Names[0].Name,
 			CheckNull: isPointer,
 		}
