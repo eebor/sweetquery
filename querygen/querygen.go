@@ -59,7 +59,7 @@ func main() {
 	}
 
 	if !outIsSrc() {
-		pkg.SrcPkgHandlePrefix = srcPkgPrefix
+		pkg.SrcPkgHandlePrefix = srcPkgName
 	}
 
 	buf := bytes.Buffer{}

@@ -10,7 +10,7 @@ import (
 )
 
 const queryPackage = "github.com/eebor/sweetquery/query"
-const srcPkgPrefix = "srcpkg"
+const srcPkgName = "srcpkg"
 
 func getImports() (map[string]string, error) {
 	imps := make(map[string]string)
@@ -23,7 +23,7 @@ func getImports() (map[string]string, error) {
 			return nil, err
 		}
 
-		imps[srcPkgPrefix] = srcPackage
+		imps[srcPkgName] = srcPackage
 	}
 
 	return imps, nil
