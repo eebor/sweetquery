@@ -3,8 +3,10 @@ package model
 import "go/ast"
 
 type Package struct {
-	Source *ast.File
-	Tasks  []GenTask
+	Name               string
+	Imports            map[string]string
+	Tasks              []GenTask
+	SrcPkgHandlePrefix string
 }
 
 type GenTask struct {

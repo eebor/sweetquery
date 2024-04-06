@@ -16,22 +16,23 @@ import (
 var builderTempl = template.Must(template.New("").Parse(`
 package main
 
-func Build{{ .QueryName }}(req *{{ .QueryName }}) []byte {
+func Build{{ .QueryName }}(req *{{ .QueryNamePrefix }}{{ .QueryName }}) []byte {
 	q := query.NewQuery()	
 {{ .Operations }}
 	return q.Bytes()
 }`))
 
 type queryBuilderParams struct {
-	QueryName  string
-	Operations string
+	QueryName       string
+	QueryNamePrefix string
+	Operations      string
 }
 
 type builderGenerator struct {
 	buidlers []ast.Decl
 }
 
-func (g *builderGenerator) ProcessTask(task *model.GenTask) error {
+func (g *builderGenerator) ProcessTask(task *model.GenTask, prefix string) error {
 	operations := make([]writeOperation, len(task.Struct.Fields.List))
 
 	for i, field := range task.Struct.Fields.List {
@@ -74,6 +75,10 @@ func (g *builderGenerator) ProcessTask(task *model.GenTask) error {
 	params := queryBuilderParams{
 		QueryName:  task.TypeSpec.Name.Name,
 		Operations: opsBuf.String(),
+	}
+
+	if prefix != "" {
+		params.QueryNamePrefix = prefix + "."
 	}
 
 	buildBuf := bytes.Buffer{}

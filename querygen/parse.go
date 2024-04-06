@@ -16,21 +16,14 @@ const (
 	taskName = "querygen:query"
 )
 
-func parseSource(sourcePath string) (*model.Package, error) {
+func parseSource(sourcePath string) ([]model.GenTask, *ast.File, error) {
 	fs := token.NewFileSet()
 	file, err := parser.ParseFile(fs, sourcePath, nil, parser.ParseComments)
 	if err != nil {
-		return nil, fmt.Errorf("failed parsing source file %v: %v", sourcePath, err)
+		return nil, nil, fmt.Errorf("failed parsing source file %v: %v", sourcePath, err)
 	}
 
-	tasks := findTasks(file)
-
-	pkg := model.Package{
-		Source: file,
-		Tasks:  tasks,
-	}
-
-	return &pkg, nil
+	return findTasks(file), file, nil
 }
 
 func findTasks(file *ast.File) []model.GenTask {
