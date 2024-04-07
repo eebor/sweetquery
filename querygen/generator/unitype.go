@@ -112,8 +112,13 @@ func (t *UniType) mapCase(key string, value string) operationInterface {
 	if !keyIsIdent {
 		return nil
 	}
+
+	baseKeyid := keyid
+
 	if keyid.Obj != nil {
+
 		nt := t.unwrapCustomType(keyid)
+
 		keyid, keyIsIdent = nt.(*ast.Ident)
 		if !keyIsIdent {
 			return nil
@@ -135,8 +140,11 @@ func (t *UniType) mapCase(key string, value string) operationInterface {
 		return nil
 	}
 
+	isCustomKeyType := baseKeyid != keyid
+
 	return &mapOperation{
 		operationInterface: op,
+		CustomKeyType:      isCustomKeyType,
 	}
 }
 
@@ -147,7 +155,7 @@ func (t *UniType) structCase(key string, value string) operationInterface {
 		Struct: st,
 	}
 
-	stname := "Param_" + key
+	var stname string
 
 	baseid, baseIsIdent := t.baseTyp.(*ast.Ident)
 	if baseIsIdent {
@@ -156,11 +164,7 @@ func (t *UniType) structCase(key string, value string) operationInterface {
 			Name: baseid,
 		}
 	} else {
-		task.TypeSpec = &ast.TypeSpec{
-			Name: &ast.Ident{
-				Name: stname,
-			},
-		}
+		return nil
 	}
 
 	t.tasks = append(t.tasks, task)

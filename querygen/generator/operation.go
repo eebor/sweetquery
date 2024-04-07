@@ -248,6 +248,7 @@ func (o *arrayOperation) Build() (*bytes.Buffer, error) {
 
 type mapOperation struct {
 	operationInterface
+	CustomKeyType bool
 }
 
 func (o *mapOperation) Build() (*bytes.Buffer, error) {
@@ -259,9 +260,14 @@ func (o *mapOperation) Build() (*bytes.Buffer, error) {
 	}
 
 	o.AddBuildKeySufix("[\" + ")
-	o.AddBuildKeySufix("string(key)")
-	o.AddBuildKeySufix(" + \"]")
 
+	if o.CustomKeyType {
+		o.AddBuildKeySufix("string(key)")
+	} else {
+		o.AddBuildKeySufix("key")
+	}
+
+	o.AddBuildKeySufix(" + \"]")
 	o.AddBuildValueSufix("[key]")
 
 	op, err := o.operationInterface.Build()
