@@ -29,9 +29,11 @@ func (t *UniType) identCase(key string, value string) operationInterface {
 	}
 
 	return &queryWriteOperation{
-		Type:  id.Name,
-		Key:   key,
-		Value: value,
+		defaultOperation: &defaultOperation{
+			Key:   key,
+			Value: value,
+		},
+		Type: id.Name,
 	}
 }
 

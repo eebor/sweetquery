@@ -2,6 +2,7 @@ package generator
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 
 	"github.com/eebor/sweetquery/querygen/generator/gentempl"
@@ -28,6 +29,10 @@ type defaultOperation struct {
 	v_sufix  string
 	k_prefix string
 	k_sufix  string
+}
+
+func (o *defaultOperation) Build() (*bytes.Buffer, error) {
+	return nil, errors.New("defaultOperation does not implement operation")
 }
 
 func (o *defaultOperation) GetValue() string {
@@ -62,6 +67,14 @@ func (o *defaultOperation) GetKeyPrefix() string {
 	return o.k_prefix
 }
 
+func (o *defaultOperation) AddBuildKeySufix(sufix string) {
+	o.k_sufix += sufix
+}
+
+func (o *defaultOperation) GetKeySufix() string {
+	return o.k_sufix
+}
+
 var queryTypeRelataion = map[string]string{
 	"string":  "String",
 	"int":     "Int",
@@ -83,13 +96,8 @@ var queryTypeConvertion = map[string]string{
 }
 
 type queryWriteOperation struct {
-	Type     string
-	Key      string
-	Value    string
-	v_prefix string
-	v_sufix  string
-	k_prefix string
-	k_sufix  string
+	*defaultOperation
+	Type string
 }
 
 func (o *queryWriteOperation) Build() (*bytes.Buffer, error) {
@@ -125,46 +133,6 @@ func (o *queryWriteOperation) Build() (*bytes.Buffer, error) {
 	}
 
 	return &buf, nil
-}
-
-func (o *queryWriteOperation) GetValue() string {
-	return o.Value
-}
-
-func (o *queryWriteOperation) AddBuildValuePrefix(prefix string) {
-	o.v_prefix = prefix + o.v_prefix
-}
-
-func (o *queryWriteOperation) GetValuePrefix() string {
-	return o.v_prefix
-}
-
-func (o *queryWriteOperation) AddBuildValueSufix(sufix string) {
-	o.v_sufix += sufix
-}
-
-func (o *queryWriteOperation) GetValueSufix() string {
-	return o.v_sufix
-}
-
-func (o *queryWriteOperation) GetKey() string {
-	return o.Key
-}
-
-func (o *queryWriteOperation) AddBuildKeyPrefix(prefix string) {
-	o.k_prefix = prefix + o.k_prefix
-}
-
-func (o *queryWriteOperation) GetKeyPrefix() string {
-	return o.k_prefix
-}
-
-func (o *queryWriteOperation) AddBuildKeySufix(sufix string) {
-	o.k_sufix += sufix
-}
-
-func (o *queryWriteOperation) GetKeySufix() string {
-	return o.k_sufix
 }
 
 type pointerCondOperation struct {
