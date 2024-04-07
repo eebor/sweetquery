@@ -97,7 +97,8 @@ var queryTypeConvertion = map[string]string{
 
 type queryWriteOperation struct {
 	*defaultOperation
-	Type string
+	Type       string
+	CustomType bool
 }
 
 func (o *queryWriteOperation) Build() (*bytes.Buffer, error) {
@@ -108,9 +109,14 @@ func (o *queryWriteOperation) Build() (*bytes.Buffer, error) {
 
 	val := o.v_prefix + o.Value + o.v_sufix
 
-	conv, ok := queryTypeConvertion[o.Type]
-	if ok {
-		val = conv + "(" + val + ")"
+	if o.CustomType {
+		conv, ok := queryTypeConvertion[o.Type]
+		if ok {
+			val = conv + "(" + val + ")"
+		} else {
+			val = o.Type + "(" + val + ")"
+		}
+
 	}
 
 	key := `"` + o.k_prefix + o.Key + o.k_sufix + `"`

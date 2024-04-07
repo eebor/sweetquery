@@ -56,12 +56,15 @@ func (t *UniType) identCase(key string, value string) operationInterface {
 		return t.GetOpertion(key, value)
 	}
 
+	isCustomType := id != t.baseTyp
+
 	return &queryWriteOperation{
 		defaultOperation: &defaultOperation{
 			Key:   key,
 			Value: value,
 		},
-		Type: id.Name,
+		Type:       id.Name,
+		CustomType: isCustomType,
 	}
 }
 
