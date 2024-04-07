@@ -19,11 +19,21 @@ type queryBuilderParams struct {
 }
 
 type builderGenerator struct {
-	buidlers []ast.Decl
+	buidlers          []ast.Decl
+	buildersNameCache map[string]bool
 }
 
 func (g *builderGenerator) ProcessTask(task *model.GenTask, prefix string) error {
 	operations := make([]operationInterface, 0)
+
+	if g.buildersNameCache != nil {
+		_, isProcessed := g.buildersNameCache[task.TypeSpec.Name.Name]
+		if isProcessed {
+			return nil
+		}
+	} else {
+		g.buildersNameCache = make(map[string]bool)
+	}
 
 	for _, field := range task.Struct.Fields.List {
 		tag := reflect.StructTag(field.Tag.Value[1 : len(field.Tag.Value)-1])
@@ -79,6 +89,8 @@ func (g *builderGenerator) ProcessTask(task *model.GenTask, prefix string) error
 	}
 
 	g.buidlers = append(g.buidlers, build.Decls[0])
+
+	g.buildersNameCache[task.TypeSpec.Name.Name] = true
 
 	return nil
 }
