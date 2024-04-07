@@ -10,6 +10,7 @@ type Package struct {
 }
 
 type GenTask struct {
-	Struct   *ast.StructType
-	TypeSpec *ast.TypeSpec
+	Struct     *ast.StructType
+	TypeSpec   *ast.TypeSpec
+	KeysPrefix string
 }

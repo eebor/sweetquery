@@ -32,7 +32,7 @@ type defaultOperation struct {
 }
 
 func (o *defaultOperation) Build() (*bytes.Buffer, error) {
-	return nil, errors.New("defaultOperation does not implement operation")
+	return nil, errors.New("defaultOperation does not implement build function")
 }
 
 func (o *defaultOperation) GetValue() string {
@@ -101,8 +101,6 @@ type queryWriteOperation struct {
 }
 
 func (o *queryWriteOperation) Build() (*bytes.Buffer, error) {
-	var buf bytes.Buffer
-
 	typ, ok := queryTypeRelataion[o.Type]
 	if !ok {
 		return nil, fmt.Errorf("QueryWrite is not support %s", o.Type)
@@ -127,7 +125,41 @@ func (o *queryWriteOperation) Build() (*bytes.Buffer, error) {
 		Type:  typ,
 	}
 
+	var buf bytes.Buffer
+
 	err := gentempl.OpWriteTempl.Execute(&buf, &params)
+	if err != nil {
+		return nil, err
+	}
+
+	return &buf, nil
+}
+
+type structOperation struct {
+	*defaultOperation
+	BuildFuncName string
+}
+
+func (o *structOperation) Build() (*bytes.Buffer, error) {
+	val := o.Value + o.v_sufix
+
+	if len(o.v_prefix) > 0 && o.v_prefix[0] == '*' {
+		val = o.v_prefix[1:] + val
+	} else {
+		val = "&" + o.v_prefix + val
+	}
+
+	params := struct {
+		BuildFuncName string
+		Value         string
+	}{
+		BuildFuncName: o.Key,
+		Value:         val,
+	}
+
+	var buf bytes.Buffer
+
+	err := gentempl.OpStructTempl.Execute(&buf, &params)
 	if err != nil {
 		return nil, err
 	}
@@ -175,7 +207,7 @@ func (o *arrayOperation) Build() (*bytes.Buffer, error) {
 	prefix := o.GetValuePrefix()
 	sufix := o.GetValueSufix()
 
-	if prefix[0] == '*' {
+	if len(prefix) > 0 && prefix[0] == '*' {
 		o.AddBuildValuePrefix("(")
 		o.AddBuildValueSufix(")")
 	}
@@ -215,7 +247,7 @@ type mapOperation struct {
 func (o *mapOperation) Build() (*bytes.Buffer, error) {
 	prefix := o.GetValuePrefix()
 
-	if prefix[0] == '*' {
+	if len(prefix) > 0 && prefix[0] == '*' {
 		o.AddBuildValuePrefix("(")
 		o.AddBuildValueSufix(")")
 	}

@@ -1,9 +1,35 @@
 package generator
 
-import "go/ast"
+import (
+	"go/ast"
+
+	"github.com/eebor/sweetquery/querygen/model"
+)
 
 type UniType struct {
-	typ ast.Expr
+	typ          ast.Expr
+	originalType ast.Expr
+	baseTyp      ast.Expr
+	tasks        []model.GenTask
+}
+
+func NewUniType(typ ast.Expr) *UniType {
+	return &UniType{
+		typ:          typ,
+		originalType: typ,
+		baseTyp:      typ,
+		tasks:        make([]model.GenTask, 0),
+	}
+}
+
+func (t *UniType) Reset() {
+	t.typ = t.originalType
+	t.baseTyp = t.originalType
+	t.tasks = make([]model.GenTask, 0)
+}
+
+func (t *UniType) GetTasks() []model.GenTask {
+	return t.tasks
 }
 
 func (t *UniType) GetOpertion(key string, value string) operationInterface {
@@ -16,6 +42,8 @@ func (t *UniType) GetOpertion(key string, value string) operationInterface {
 		return t.arrayCase(key, value)
 	case *ast.MapType:
 		return t.mapCase(key, value)
+	case *ast.StructType:
+		return t.structCase(key, value)
 	}
 
 	return nil
@@ -39,6 +67,9 @@ func (t *UniType) identCase(key string, value string) operationInterface {
 
 func (t *UniType) pointerCase(key string, value string) operationInterface {
 	t.typ = t.typ.(*ast.StarExpr).X
+
+	t.baseTyp = t.typ
+
 	op := t.GetOpertion(key, value)
 	if op == nil {
 		return nil
@@ -51,6 +82,9 @@ func (t *UniType) pointerCase(key string, value string) operationInterface {
 
 func (t *UniType) arrayCase(key string, value string) operationInterface {
 	t.typ = t.typ.(*ast.ArrayType).Elt
+
+	t.baseTyp = t.typ
+
 	op := t.GetOpertion(key, value)
 	if op == nil {
 		return nil
@@ -60,6 +94,8 @@ func (t *UniType) arrayCase(key string, value string) operationInterface {
 	if isArray {
 		return nil
 	}
+
+	t.baseTyp = t.typ
 
 	return &arrayOperation{
 		operationInterface: op,
@@ -98,6 +134,41 @@ func (t *UniType) mapCase(key string, value string) operationInterface {
 
 	return &mapOperation{
 		operationInterface: op,
+	}
+}
+
+func (t *UniType) structCase(key string, value string) operationInterface {
+	st := t.typ.(*ast.StructType)
+
+	task := model.GenTask{
+		Struct: st,
+	}
+
+	stname := "Param_" + key
+
+	baseid, baseIsIdent := t.baseTyp.(*ast.Ident)
+	if baseIsIdent {
+		stname = baseid.Name
+		task.TypeSpec = &ast.TypeSpec{
+			Name: baseid,
+		}
+	} else {
+		task.TypeSpec = &ast.TypeSpec{
+			Name: &ast.Ident{
+				Name: stname,
+			},
+		}
+	}
+
+	t.tasks = append(t.tasks, task)
+
+	buildFuncName := "Build" + stname
+
+	return &structOperation{
+		defaultOperation: &defaultOperation{
+			Key:   buildFuncName,
+			Value: value,
+		},
 	}
 }
 

@@ -10,7 +10,7 @@ type Query struct {
 }
 
 func NewQuery() *Query {
-	b := make([]byte, 0, 256)
+	b := make([]byte, 0, 1024)
 
 	return &Query{
 		buf: bytes.NewBuffer(b),
@@ -48,6 +48,11 @@ func (q *Query) WriteBool(key string, value bool) {
 func (q *Query) WriteFloat(key string, value float64) {
 	s := strconv.FormatFloat(value, 'f', 2, 64)
 	q.WriteString(key, s)
+}
+
+func (q *Query) AppendQuery(query *Query) {
+	q.separate()
+	query.buf.WriteTo(q.buf)
 }
 
 func (q *Query) String() string {

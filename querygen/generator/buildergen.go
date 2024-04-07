@@ -32,19 +32,25 @@ func (g *builderGenerator) ProcessTask(task *model.GenTask, prefix string) error
 		if key == "" {
 			continue
 		}
-
-		t := UniType{
-			typ: field.Type,
+		if prefix != "" {
+			key = prefix + "[" + key + "]"
 		}
 
+		t := NewUniType(field.Type)
+
+		var op operationInterface
 		for _, name := range field.Names {
-			t.typ = field.Type
-			op := t.GetOpertion(key, "req."+name.Name)
+			t.Reset()
+			op = t.GetOpertion(key, "obj."+name.Name)
 			if op == nil {
 				return fmt.Errorf("type of %s is not supported", field.Names[0].Name)
 			}
 
 			operations = append(operations, op)
+		}
+
+		for _, task := range t.GetTasks() {
+			g.ProcessTask(&task, key)
 		}
 	}
 
@@ -61,10 +67,6 @@ func (g *builderGenerator) ProcessTask(task *model.GenTask, prefix string) error
 	params := queryBuilderParams{
 		QueryName:  task.TypeSpec.Name.Name,
 		Operations: opsBuf.String(),
-	}
-
-	if prefix != "" {
-		params.QueryNamePrefix = prefix + "."
 	}
 
 	buildBuf := bytes.Buffer{}

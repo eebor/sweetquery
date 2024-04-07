@@ -6,6 +6,11 @@ var OpWriteTempl = template.Must(template.New("").Parse(`
 q.Write{{ .Type }}({{ .Key }}, {{ .Value }})
 `))
 
+var OpStructTempl = template.Must(template.New("").Parse(`
+build := {{ .BuildFuncName }}({{ .Value }})
+q.AppendQuery(build)
+`))
+
 var OpPointerCondTempl = template.Must(template.New("").Parse(`
 if {{ .Value }} != nil {
 	{{ .Operation }}
