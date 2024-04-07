@@ -7,8 +7,7 @@ q.Write{{ .Type }}({{ .Key }}, {{ .Value }})
 `))
 
 var OpStructTempl = template.Must(template.New("").Parse(`
-build := {{ .BuildFuncName }}({{ .Value }})
-q.AppendQuery(build)
+{{ .BuildFuncName }}({{ .Value }}, q)
 `))
 
 var OpPointerCondTempl = template.Must(template.New("").Parse(`

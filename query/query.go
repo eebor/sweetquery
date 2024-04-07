@@ -5,12 +5,14 @@ import (
 	"strconv"
 )
 
+const buf_size = 256
+
 type Query struct {
 	buf *bytes.Buffer
 }
 
 func NewQuery() *Query {
-	b := make([]byte, 0, 1024)
+	b := make([]byte, 0, buf_size)
 
 	return &Query{
 		buf: bytes.NewBuffer(b),
