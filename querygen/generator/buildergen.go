@@ -7,20 +7,10 @@ import (
 	"go/parser"
 	"go/token"
 	"reflect"
-	"strconv"
-	"text/template"
 
+	"github.com/eebor/sweetquery/querygen/generator/gentempl"
 	"github.com/eebor/sweetquery/querygen/model"
 )
-
-var builderTempl = template.Must(template.New("").Parse(`
-package main
-
-func Build{{ .QueryName }}(req *{{ .QueryNamePrefix }}{{ .QueryName }}) []byte {
-	q := query.NewQuery()	
-{{ .Operations }}
-	return q.Bytes()
-}`))
 
 type queryBuilderParams struct {
 	QueryName       string
@@ -33,9 +23,9 @@ type builderGenerator struct {
 }
 
 func (g *builderGenerator) ProcessTask(task *model.GenTask, prefix string) error {
-	operations := make([]writeOperation, len(task.Struct.Fields.List))
+	operations := make([]operationInterface, 0)
 
-	for i, field := range task.Struct.Fields.List {
+	for _, field := range task.Struct.Fields.List {
 		tag := reflect.StructTag(field.Tag.Value[1 : len(field.Tag.Value)-1])
 
 		key := tag.Get("query")
@@ -43,22 +33,18 @@ func (g *builderGenerator) ProcessTask(task *model.GenTask, prefix string) error
 			continue
 		}
 
-		t, _ := field.Type.(*ast.Ident)
-
-		pointer, isPointer := field.Type.(*ast.StarExpr)
-		if isPointer {
-			t = pointer.X.(*ast.Ident)
+		t := UniType{
+			typ: field.Type,
 		}
 
-		if t == nil {
-			return fmt.Errorf("type of %s is not supported", field.Names[0].Name)
-		}
+		for _, name := range field.Names {
+			t.typ = field.Type
+			op := t.GetOpertion(key, "req."+name.Name)
+			if op == nil {
+				return fmt.Errorf("type of %s is not supported", field.Names[0].Name)
+			}
 
-		operations[i] = writeOperation{
-			Type:      opTypeRelataion[t.Name],
-			Key:       strconv.Quote(key),
-			Value:     "req." + field.Names[0].Name,
-			CheckNull: isPointer,
+			operations = append(operations, op)
 		}
 	}
 
@@ -83,7 +69,7 @@ func (g *builderGenerator) ProcessTask(task *model.GenTask, prefix string) error
 
 	buildBuf := bytes.Buffer{}
 
-	builderTempl.Execute(&buildBuf, params)
+	gentempl.BuilderTempl.Execute(&buildBuf, params)
 
 	build, err := parser.ParseFile(token.NewFileSet(), "", buildBuf.Bytes(), 0)
 	if err != nil {

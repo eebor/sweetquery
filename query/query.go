@@ -6,11 +6,15 @@ import (
 )
 
 type Query struct {
-	buf bytes.Buffer
+	buf *bytes.Buffer
 }
 
 func NewQuery() *Query {
-	return &Query{}
+	b := make([]byte, 0, 256)
+
+	return &Query{
+		buf: bytes.NewBuffer(b),
+	}
 }
 
 func (q *Query) separate() {
@@ -26,8 +30,8 @@ func (q *Query) WriteString(key string, value string) {
 	q.buf.WriteString(value)
 }
 
-func (q *Query) WriteInt(key string, value int) {
-	s := strconv.FormatInt(int64(value), 10)
+func (q *Query) WriteInt(key string, value int64) {
+	s := strconv.FormatInt(value, 10)
 	q.WriteString(key, s)
 }
 
