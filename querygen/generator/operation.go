@@ -109,14 +109,11 @@ func (o *queryWriteOperation) Build() (*bytes.Buffer, error) {
 
 	val := o.v_prefix + o.Value + o.v_sufix
 
-	if o.CustomType {
-		conv, ok := queryTypeConvertion[o.Type]
-		if ok {
-			val = conv + "(" + val + ")"
-		} else {
-			val = o.Type + "(" + val + ")"
-		}
-
+	conv, ok := queryTypeConvertion[o.Type]
+	if ok {
+		val = conv + "(" + val + ")"
+	} else if o.CustomType {
+		val = o.Type + "(" + val + ")"
 	}
 
 	key := `"` + o.k_prefix + o.Key + o.k_sufix + `"`
